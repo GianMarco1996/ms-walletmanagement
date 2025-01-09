@@ -1,0 +1,491 @@
+openapi: 3.0.0
+info:
+  title: Gestión de Monederos
+  description: API para gestionar los monederos Yanki.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Servidor local
+tags:
+  - name: wallet
+    description: Todo sobre los monederos
+paths:
+  /wallet/list:
+    get:
+      tags:
+        - wallet
+      summary: Devuelve los monederos
+      operationId: getWallets
+      description: Obtiene los monederos
+      parameters:
+        - name: status
+          description: "Indica el estado para poder filtrar el monedero: T: ALL, A: ACTIVE, I: INACTIVE"
+          in: query
+          required: true
+          schema:
+            type: string
+            default: "T"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WalletResponse"
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
+  /wallet:
+    post:
+      tags:
+        - wallet
+      summary: Registra un monedero
+      operationId: registerWallet
+      description: Crea un nuevo monedero
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletRequest"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Se registro de forma exitosa."
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
+  /wallet/{id}:
+    get:
+      tags:
+        - wallet
+      summary: Obtiene un monedero
+      operationId: getWallet
+      description: Obtiene un monedero por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del monedero
+          schema:
+            type: string
+            example: "6764c17cb1fa3cd77d0644d8"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletResponse"
+        "404":
+          description: "No se encontró el monedero"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Monedero no encontrado"
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
+    put:
+      tags:
+        - wallet
+      summary: Actualiza un monedero
+      operationId: updateWallet
+      description: Actualiza un monedero por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del monedero
+          schema:
+            type: string
+            example: "6764c17cb1fa3cd77d0644d8"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletRequest"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Se actualizo de forma exitosa."
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
+  /wallet/walletStatus/{id}:
+    put:
+      tags:
+        - wallet
+      summary: Activa o desactiva un monedero
+      operationId: updateWalletStatus
+      description: Actualiza el estado de un monedero por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del monedero
+          schema:
+            type: string
+            example: "6764c17cb1fa3cd77d0644d8"
+        - name: status
+          description: "Indica el estado para activar o desactivar el monedero: A: ACTIVE, I: INACTIVE"
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "A"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Se actualizo de forma exitosa."
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
+  /wallet/walletTransactions/{id}:
+    get:
+      tags:
+        - wallet
+      summary: Obtiene las transacciones de un monedero
+      operationId: getWalletTransactions
+      description: Obtiene un monedero con sus transacciones por ID del monedero
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del monedero
+          schema:
+            type: string
+            example: "6764c17cb1fa3cd77d0644d8"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletDetailResponse"
+        "404":
+          description: "No se encontró el monedero"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Monedero no encontrado"
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
+  /wallet/associateDebitCardWithAnWallet/{id}:
+    put:
+      tags:
+        - wallet
+      summary: Asocia una tarjeta de débito a un monedero
+      operationId: associateDebitCard
+      description: Asocia una tarjeta de débito por el Id del monedero
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del monedero
+          schema:
+            type: string
+            example: "6764c17cb1fa3cd77d0644d8"
+        - name: debitCardId
+          in: query
+          required: true
+          description: ID de la tarjeta de debito
+          schema:
+            type: string
+            example: "6764c17cb1fa3cd77d0644d8"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Se actualizo de forma exitosa."
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
+  /wallet/yankearWallet/{id}:
+    put:
+      tags:
+        - wallet
+      summary: Registra el envío y recepción del dinero al monedero
+      operationId: yankearWallet
+      description: Registra el envío y recepción del dinero a los monederos origen y destino respectivamente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id del monedero
+          schema:
+            type: string
+            example: "6764c17cb1fa3cd77d0644d8"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/YankearWallet"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Se registro de forma exitosa."
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
+components:
+  schemas:
+    WalletResponse:
+      type: object
+      properties:
+        id:
+          description: "Id del monedero"
+          type: string
+          example: "6764c17cb1fa3cd77d0644d8"
+        fullNames:
+          description: "Nombres y apellidos"
+          type: string
+          example: "Pepe Farfan Guerrero"
+        documentType:
+          description: "Tipo de documento de la persona: DNI(D), Carnet de Extranjeria(CE) y Pasaporte(P)"
+          type: string
+          example: "DNI"
+        documentNumber:
+          description: "Numero de documento de la persona"
+          type: string
+          example: "5112038226"
+        mobile:
+          description: "Número de celular"
+          type: string
+          example: "987654321"
+        mobileImei:
+          description: "Número de IMEI del celular"
+          type: string
+          example: "123456789087654"
+        email:
+          description: "Correo electrónico "
+          type: string
+          example: "pepe@correo.com"
+        currentBalance:
+          description: "Saldo actual del monedero"
+          type: number
+          format: double
+          example: 100
+        debitCardId:
+          description: "Id de la tarjeta de débito asociada"
+          type: string
+          example: "6764c17cb1fa3cd77d0644d8"
+    WalletRequest:
+      type: object
+      required:
+        - fullNames
+        - documentType
+        - documentNumber
+        - mobile
+        - mobileImei
+        - email
+      properties:
+        fullNames:
+          description: "Nombres y apellidos"
+          type: string
+          example: "Pepe Farfan Guerrero"
+        documentType:
+          description: "Tipo de documento de la persona: DNI(D), Carnet de Extranjeria(CE) y Pasaporte(P)"
+          type: string
+          example: "D"
+          enum:
+            - D
+            - CE
+            - P
+        documentNumber:
+          description: "Numero de documento de la persona"
+          type: string
+          example: "5112038226"
+        mobile:
+          description: "Número de celular"
+          type: string
+          example: "987654321"
+        mobileImei:
+          description: "Número de IMEI del celular"
+          type: string
+          example: "123456789087654"
+        email:
+          description: "Correo electrónico "
+          type: string
+          example: "pepe@correo.com"
+    WalletDetailResponse:
+      type: object
+      properties:
+        id:
+          description: "Id del monedero"
+          type: string
+          example: "6764c17cb1fa3cd77d0644d8"
+        fullNames:
+          description: "Nombres y apellidos"
+          type: string
+          example: "Pepe Farfan Guerrero"
+        documentType:
+          description: "Tipo de documento de la persona: DNI(D), Carnet de Extranjeria(CE) y Pasaporte(P)"
+          type: string
+          example: "DNI"
+        documentNumber:
+          description: "Numero de documento de la persona"
+          type: string
+          example: "5112038226"
+        mobile:
+          description: "Número de celular"
+          type: string
+          example: "987654321"
+        mobileImei:
+          description: "Número de IMEI del celular"
+          type: string
+          example: "123456789087654"
+        email:
+          description: "Correo electrónico "
+          type: string
+          example: "pepe@correo.com"
+        currentBalance:
+          description: "Saldo actual del monedero"
+          type: number
+          format: double
+          example: 100
+        debitCardId:
+          description: "Id de la tarjeta de débito asociada"
+          type: string
+          example: "6764c17cb1fa3cd77d0644d8"
+        transactions:
+          description: "Transacciones asociadas a este monedero"
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionResponse'
+    TransactionResponse:
+      type: object
+      properties:
+        id:
+          description: "Id de la transacción"
+          type: string
+          example: "6764c17cb1fa3cd77d0644d8"
+        category:
+          description: "Categoría de la transacción"
+          type: string
+          example: "Depósito"
+        type:
+          description: "Tipo de transacción"
+          type: string
+          example: "Movimiento"
+        accountId:
+          description: "Id de la cuenta de esta transacción"
+          type: string
+          example: "6764c17cb1fa3cd77d0644d8"
+        amount:
+          description: "Monto de la transacción"
+          type: number
+          format: double
+          example: 250
+        transactionDate:
+          description: "Fecha de la transacción"
+          type: string
+          example: "21/12/2024"
+        description:
+          description: "Descripción de la transacción"
+          type: string
+          example: "Se realiza depósito a la cuenta"
+    YankearWallet:
+      type: object
+      required:
+        - mobileDestination
+        - amount
+      properties:
+        mobileDestination:
+          description: "Número de celular hacia quien se va a realizar el pago(yankear)"
+          type: string
+          example: "987654321"
+        amount:
+          description: "Monto a pagar"
+          type: number
+          format: double
+          example: 100
+        description:
+          description: "Descripción del pago realizado"
+          type: string
+          example: "Te realizo el siguiente pago por el servicio prestado"
