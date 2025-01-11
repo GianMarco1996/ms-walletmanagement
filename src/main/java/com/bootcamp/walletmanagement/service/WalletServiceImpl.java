@@ -1,16 +1,21 @@
 package com.bootcamp.walletmanagement.service;
 
 import com.bootcamp.walletmanagement.mapper.WalletMapper;
+import com.bootcamp.walletmanagement.messaging.KafkaProducer;
+import com.bootcamp.walletmanagement.messaging.Transaction;
 import com.bootcamp.walletmanagement.model.Wallet;
 import com.bootcamp.walletmanagement.model.WalletDTO;
 import com.bootcamp.walletmanagement.model.YankearWalletDTO;
 import com.bootcamp.walletmanagement.repository.WalletRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -21,6 +26,9 @@ public class WalletServiceImpl implements WalletService {
 
     @Autowired
     private WalletMapper walletMapper;
+
+    @Autowired
+    private KafkaProducer kafkaProducer;
 
     @Override
     public Flux<Wallet> getWallets(String status) {
@@ -100,30 +108,70 @@ public class WalletServiceImpl implements WalletService {
     @Override
     public Mono<String> yankearWallet(String id, Mono<YankearWalletDTO> yankearWallet) {
         return yankearWallet.flatMap(yanki -> walletRepository.findById(id)
-                        .map(wallet -> {
+                        .flatMap(wallet -> {
                             if (Objects.isNull(wallet.getDebitCardId())) {
                                 if (wallet.getCurrentBalance() < yanki.getAmount()) {
                                     throw new IllegalArgumentException("No tiene saldo suficiente para realizar el pago.");
                                 }
                                 wallet.setCurrentBalance(wallet.getCurrentBalance() - yanki.getAmount());
+                                return walletRepository.save(wallet)
+                                        .flatMap(wa -> updateYankiOrigin(Mono.just(wa), yanki));
                             } else {
                                 System.out.println("Se actualiza el monto en la cuenta principal de la TD");
+                                return Mono.just(wallet).flatMap(wa -> updateYankiOrigin(Mono.just(wa), yanki));
                             }
-                            return wallet;
                         })
-                        .flatMap(walletRepository::save)
-                        .flatMap(wallet -> walletRepository.findWalletByMobile(yanki.getMobileDestination())
-                                .map(walletDestination -> {
+                        .flatMap(transactions -> walletRepository.findWalletByMobile(yanki.getMobileDestination())
+                                .flatMap(walletDestination -> {
                                     if (Objects.isNull(walletDestination.getDebitCardId())) {
                                         walletDestination.setCurrentBalance(walletDestination.getCurrentBalance() + yanki.getAmount());
+                                        return walletRepository.save(walletDestination)
+                                                .flatMap(wa -> updateYankiDestination(transactions, yanki));
                                     } else {
                                         System.out.println("Se actualiza el monto en la cuenta principal de la TD");
+                                        return Mono.just(walletDestination).flatMap(wa -> updateYankiDestination(transactions, yanki));
                                     }
-                                    return walletDestination;
-                                })
-                                .flatMap(walletRepository::save)
-                        )
-                )
-                .flatMap(wallet -> Mono.just("Se Yankeo correctamente"));
+                                }))
+                ).map(transactions -> {
+                    sendMessage(transactions);
+                    return transactions;
+                }).flatMap(wallet -> Mono.just("Se Yankeo correctamente"));
+    }
+
+    private Mono<List<Transaction>> updateYankiOrigin(Mono<Wallet> wallet, YankearWalletDTO yanki) {
+        return wallet.flatMap(wa -> {
+            List<Transaction> transactions = new ArrayList<>();
+            Transaction transaction = new Transaction();
+            transaction.setCategory("Yanki");
+            transaction.setType("Movimiento");
+            transaction.setMobile(wa.getMobile());
+            transaction.setTransactionDate(LocalDate.now().toString());
+            transaction.setAmount(yanki.getAmount());
+            transaction.setDescription(Objects.isNull(yanki.getDescription()) ? "Yanki realizado" : yanki.getDescription());
+            transactions.add(transaction);
+            return Mono.just(transactions);
+        });
+    }
+
+    private Mono<List<Transaction>> updateYankiDestination(List<Transaction> transactions, YankearWalletDTO yanki) {
+        return Mono.just(transactions).map(tr -> {
+            Transaction transaction = new Transaction();
+            transaction.setCategory("Yanki");
+            transaction.setType("Movimiento");
+            transaction.setTransactionDate(LocalDate.now().toString());
+            transaction.setMobile(yanki.getMobileDestination());
+            transaction.setAmount(yanki.getAmount());
+            transaction.setDescription(Objects.isNull(yanki.getDescription()) ? "Yanki recibido" : yanki.getDescription());
+            tr.add(transaction);
+            return tr;
+        });
+    }
+
+    private void sendMessage(List<Transaction> transactions) {
+        try {
+            kafkaProducer.send(transactions);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
