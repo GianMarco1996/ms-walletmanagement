@@ -470,6 +470,10 @@ components:
           description: "Descripción de la transacción"
           type: string
           example: "Se realiza depósito a la cuenta"
+        mobile:
+          description: "Número de celular"
+          type: string
+          example: "987654321"
     YankearWallet:
       type: object
       required:

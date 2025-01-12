@@ -10,7 +10,6 @@ public class JacksonConfig {
 
     @Bean
     public ObjectMapper objectMapper() {
-        // Configura globalmente Jackson para excluir campos null
         return new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 }

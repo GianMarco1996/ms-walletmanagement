@@ -104,7 +104,7 @@ public class WalletMapper {
         transaction.setAmount(dto.getAmount());
         transaction.setTransactionDate(dto.getTransactionDate());
         transaction.setDescription(dto.getDescription());
-        //transaction.setMobile(dto.getMobile());
+        transaction.setMobile(dto.getMobile());
         return transaction;
     }
 }

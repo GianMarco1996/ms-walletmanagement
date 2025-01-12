@@ -90,7 +90,6 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public Mono<WalletDTO> getWalletTransactions(String id) {
-        System.err.println("Entro a wallet service");
         return walletRepository.findById(id)
                 .map(wallet -> walletMapper.documentToDto(wallet))
                 .map(wallet -> {
