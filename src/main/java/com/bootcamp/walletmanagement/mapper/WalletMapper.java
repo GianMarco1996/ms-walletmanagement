@@ -1,6 +1,7 @@
 package com.bootcamp.walletmanagement.mapper;
 
 import com.bootcamp.walletmanagement.model.*;
+import com.bootcamp.walletmanagement.model.redis.Transaction;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -94,7 +95,7 @@ public class WalletMapper {
         };
     }
 
-    private TransactionResponse getTransaction(WalletTransaction dto) {
+    private TransactionResponse getTransaction(Transaction dto) {
         TransactionResponse transaction = new TransactionResponse();
         transaction.setId(dto.getId());
         transaction.setCategory(dto.getCategory());
@@ -103,6 +104,7 @@ public class WalletMapper {
         transaction.setAmount(dto.getAmount());
         transaction.setTransactionDate(dto.getTransactionDate());
         transaction.setDescription(dto.getDescription());
+        //transaction.setMobile(dto.getMobile());
         return transaction;
     }
 }

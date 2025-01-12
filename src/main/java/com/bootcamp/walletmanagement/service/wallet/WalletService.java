@@ -1,4 +1,4 @@
-package com.bootcamp.walletmanagement.service;
+package com.bootcamp.walletmanagement.service.wallet;
 
 import com.bootcamp.walletmanagement.model.Wallet;
 import com.bootcamp.walletmanagement.model.WalletDTO;

@@ -1,5 +1,6 @@
 package com.bootcamp.walletmanagement.model;
 
+import com.bootcamp.walletmanagement.model.redis.Transaction;
 import lombok.Data;
 
 import java.util.List;
@@ -26,5 +27,5 @@ public class WalletDTO {
 
     private Boolean status;
 
-    private List<WalletTransaction> transactions;
+    private List<Transaction> transactions;
 }

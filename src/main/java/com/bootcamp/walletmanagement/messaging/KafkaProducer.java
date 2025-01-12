@@ -20,7 +20,7 @@ public class KafkaProducer {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    public void send(List<Transaction> transactions) throws JsonProcessingException {
+    public void send(List<KafkaTransaction> transactions) throws JsonProcessingException {
         String jsonString = objectMapper.writeValueAsString(transactions);
         kafkaTemplate.send(topicName, jsonString);
     }

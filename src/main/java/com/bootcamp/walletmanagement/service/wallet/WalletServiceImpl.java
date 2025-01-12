@@ -1,12 +1,13 @@
-package com.bootcamp.walletmanagement.service;
+package com.bootcamp.walletmanagement.service.wallet;
 
 import com.bootcamp.walletmanagement.mapper.WalletMapper;
 import com.bootcamp.walletmanagement.messaging.KafkaProducer;
-import com.bootcamp.walletmanagement.messaging.Transaction;
+import com.bootcamp.walletmanagement.messaging.KafkaTransaction;
 import com.bootcamp.walletmanagement.model.Wallet;
 import com.bootcamp.walletmanagement.model.WalletDTO;
 import com.bootcamp.walletmanagement.model.YankearWalletDTO;
 import com.bootcamp.walletmanagement.repository.WalletRepository;
+import com.bootcamp.walletmanagement.service.redis.RedisService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,9 @@ public class WalletServiceImpl implements WalletService {
 
     @Autowired
     private KafkaProducer kafkaProducer;
+
+    @Autowired
+    private RedisService redisService;
 
     @Override
     public Flux<Wallet> getWallets(String status) {
@@ -86,10 +90,11 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public Mono<WalletDTO> getWalletTransactions(String id) {
+        System.err.println("Entro a wallet service");
         return walletRepository.findById(id)
                 .map(wallet -> walletMapper.documentToDto(wallet))
                 .map(wallet -> {
-                    wallet.setTransactions(new ArrayList<>());
+                    wallet.setTransactions(redisService.findAllTransactionsRedis(wallet.getMobile()));
                     return wallet;
                 });
     }
@@ -138,10 +143,10 @@ public class WalletServiceImpl implements WalletService {
                 }).flatMap(wallet -> Mono.just("Se Yankeo correctamente"));
     }
 
-    private Mono<List<Transaction>> updateYankiOrigin(Mono<Wallet> wallet, YankearWalletDTO yanki) {
+    private Mono<List<KafkaTransaction>> updateYankiOrigin(Mono<Wallet> wallet, YankearWalletDTO yanki) {
         return wallet.flatMap(wa -> {
-            List<Transaction> transactions = new ArrayList<>();
-            Transaction transaction = new Transaction();
+            List<KafkaTransaction> transactions = new ArrayList<>();
+            KafkaTransaction transaction = new KafkaTransaction();
             transaction.setCategory("Yanki");
             transaction.setType("Movimiento");
             transaction.setMobile(wa.getMobile());
@@ -153,9 +158,9 @@ public class WalletServiceImpl implements WalletService {
         });
     }
 
-    private Mono<List<Transaction>> updateYankiDestination(List<Transaction> transactions, YankearWalletDTO yanki) {
+    private Mono<List<KafkaTransaction>> updateYankiDestination(List<KafkaTransaction> transactions, YankearWalletDTO yanki) {
         return Mono.just(transactions).map(tr -> {
-            Transaction transaction = new Transaction();
+            KafkaTransaction transaction = new KafkaTransaction();
             transaction.setCategory("Yanki");
             transaction.setType("Movimiento");
             transaction.setTransactionDate(LocalDate.now().toString());
@@ -167,7 +172,7 @@ public class WalletServiceImpl implements WalletService {
         });
     }
 
-    private void sendMessage(List<Transaction> transactions) {
+    private void sendMessage(List<KafkaTransaction> transactions) {
         try {
             kafkaProducer.send(transactions);
         } catch (JsonProcessingException e) {

@@ -6,7 +6,7 @@ import com.bootcamp.walletmanagement.model.WalletDetailResponse;
 import com.bootcamp.walletmanagement.model.WalletRequest;
 import com.bootcamp.walletmanagement.model.WalletResponse;
 import com.bootcamp.walletmanagement.model.YankearWallet;
-import com.bootcamp.walletmanagement.service.WalletService;
+import com.bootcamp.walletmanagement.service.wallet.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;

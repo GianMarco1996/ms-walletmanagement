@@ -3,7 +3,7 @@ package com.bootcamp.walletmanagement.messaging;
 import lombok.Data;
 
 @Data
-public class Transaction {
+public class KafkaTransaction {
 
     private String category;
 
