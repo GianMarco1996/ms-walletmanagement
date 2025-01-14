@@ -23,4 +23,6 @@ public interface WalletService {
     Mono<String> associateDebitCard(String id, String debitCardId);
 
     Mono<String> yankearWallet(String id, Mono<YankearWalletDTO> yankearWallet);
+
+    Mono<String> associateBootCoin(String id);
 }

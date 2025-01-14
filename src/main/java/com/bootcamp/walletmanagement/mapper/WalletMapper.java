@@ -21,6 +21,7 @@ public class WalletMapper {
         wallet.setCurrentBalance(document.getCurrentBalance());
         wallet.setDebitCardId(document.getDebitCardId());
         wallet.setStatus(document.getStatus());
+        wallet.setBootCoin(document.getBootCoin());
         return wallet;
     }
 
@@ -35,6 +36,7 @@ public class WalletMapper {
         wallet.setEmail(dto.getEmail());
         wallet.setCurrentBalance(dto.getCurrentBalance());
         wallet.setDebitCardId(dto.getDebitCardId());
+        wallet.setBootCoin(dto.getBootCoin());
         wallet.transactions(dto.getTransactions().stream().map(this::getTransaction).toList());
         return wallet;
     }
@@ -50,6 +52,7 @@ public class WalletMapper {
         wallet.setEmail(document.getEmail());
         wallet.setCurrentBalance(document.getCurrentBalance());
         wallet.setDebitCardId(document.getDebitCardId());
+        wallet.setBootCoin(document.getBootCoin());
         return wallet;
     }
 

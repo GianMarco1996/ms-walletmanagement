@@ -72,4 +72,10 @@ public class WalletController implements WalletApi {
         return walletService.yankearWallet(id, yankearWallet.map(walletMapper::modelToDto))
                 .map(ResponseEntity::ok);
     }
+
+    @Override
+    public Mono<ResponseEntity<Object>> associateBootCoin(String id, ServerWebExchange exchange) {
+        return walletService.associateBootCoin(id)
+                .map(ResponseEntity::ok);
+    }
 }

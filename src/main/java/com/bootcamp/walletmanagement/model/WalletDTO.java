@@ -27,5 +27,7 @@ public class WalletDTO {
 
     private Boolean status;
 
+    private Integer bootCoin;
+
     private List<Transaction> transactions;
 }

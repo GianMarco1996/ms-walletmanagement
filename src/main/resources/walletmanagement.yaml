@@ -313,6 +313,40 @@ paths:
                   message:
                     type: string
                     example: "Error en el servidor."
+  /wallet/associateBootCoinWithAWallet/{id}:
+    put:
+      tags:
+        - wallet
+      summary: Asocia BootCoin a un monedero
+      operationId: associateBootCoin
+      description: Asocia BootCoin por el Id del monedero
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del monedero
+          schema:
+            type: string
+            example: "6764c17cb1fa3cd77d0644d8"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Se actualizo de forma exitosa."
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
 components:
   schemas:
     WalletResponse:
@@ -355,6 +389,10 @@ components:
           description: "Id de la tarjeta de débito asociada"
           type: string
           example: "6764c17cb1fa3cd77d0644d8"
+        bootCoin:
+          description: "Cantidad de bootCoin del monedero"
+          type: integer
+          example: 10
     WalletRequest:
       type: object
       required:
@@ -433,6 +471,10 @@ components:
           description: "Id de la tarjeta de débito asociada"
           type: string
           example: "6764c17cb1fa3cd77d0644d8"
+        bootCoin:
+          description: "Cantidad de bootCoin del monedero"
+          type: integer
+          example: 10
         transactions:
           description: "Transacciones asociadas a este monedero"
           type: array

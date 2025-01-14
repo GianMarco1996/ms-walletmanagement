@@ -31,4 +31,6 @@ public class Wallet {
     private Boolean status;
 
     private String debitCardId;
+
+    private Integer bootCoin;
 }

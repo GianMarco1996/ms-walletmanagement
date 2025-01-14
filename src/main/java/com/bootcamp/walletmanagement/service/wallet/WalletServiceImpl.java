@@ -142,6 +142,17 @@ public class WalletServiceImpl implements WalletService {
                 }).flatMap(wallet -> Mono.just("Se Yankeo correctamente"));
     }
 
+    @Override
+    public Mono<String> associateBootCoin(String id) {
+        return walletRepository.findById(id)
+                .map(wallet -> {
+                    wallet.setBootCoin(0);
+                    return wallet;
+                })
+                .flatMap(walletRepository::save)
+                .flatMap(wallet -> Mono.just("BootCoin asociado correctamente"));
+    }
+
     private Mono<List<KafkaTransaction>> updateYankiOrigin(Mono<Wallet> wallet, YankearWalletDTO yanki) {
         return wallet.flatMap(wa -> {
             List<KafkaTransaction> transactions = new ArrayList<>();
