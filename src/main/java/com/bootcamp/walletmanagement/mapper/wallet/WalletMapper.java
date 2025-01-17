@@ -1,7 +1,10 @@
-package com.bootcamp.walletmanagement.mapper;
+package com.bootcamp.walletmanagement.mapper.wallet;
 
 import com.bootcamp.walletmanagement.model.*;
 import com.bootcamp.walletmanagement.model.redis.Transaction;
+import com.bootcamp.walletmanagement.model.wallet.Wallet;
+import com.bootcamp.walletmanagement.model.wallet.WalletDTO;
+import com.bootcamp.walletmanagement.model.wallet.YankearWalletDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;

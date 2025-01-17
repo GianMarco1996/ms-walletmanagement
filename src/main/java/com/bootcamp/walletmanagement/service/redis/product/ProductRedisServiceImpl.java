@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ProductRedisServiceImpl implements ProductRedisService{
+public class ProductRedisServiceImpl implements ProductRedisService {
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;

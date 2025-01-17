@@ -1,4 +1,4 @@
-package com.bootcamp.walletmanagement.model;
+package com.bootcamp.walletmanagement.model.wallet;
 
 import lombok.Data;
 

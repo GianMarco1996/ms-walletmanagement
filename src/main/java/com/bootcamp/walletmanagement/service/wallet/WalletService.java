@@ -1,8 +1,8 @@
 package com.bootcamp.walletmanagement.service.wallet;
 
-import com.bootcamp.walletmanagement.model.Wallet;
-import com.bootcamp.walletmanagement.model.WalletDTO;
-import com.bootcamp.walletmanagement.model.YankearWalletDTO;
+import com.bootcamp.walletmanagement.model.wallet.Wallet;
+import com.bootcamp.walletmanagement.model.wallet.WalletDTO;
+import com.bootcamp.walletmanagement.model.wallet.YankearWalletDTO;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

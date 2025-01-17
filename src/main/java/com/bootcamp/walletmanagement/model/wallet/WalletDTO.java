@@ -1,4 +1,4 @@
-package com.bootcamp.walletmanagement.model;
+package com.bootcamp.walletmanagement.model.wallet;
 
 import com.bootcamp.walletmanagement.model.redis.Transaction;
 import lombok.Data;

@@ -1,7 +1,7 @@
-package com.bootcamp.walletmanagement.controller;
+package com.bootcamp.walletmanagement.controller.wallet;
 
 import com.bootcamp.walletmanagement.api.WalletApi;
-import com.bootcamp.walletmanagement.mapper.WalletMapper;
+import com.bootcamp.walletmanagement.mapper.wallet.WalletMapper;
 import com.bootcamp.walletmanagement.model.WalletDetailResponse;
 import com.bootcamp.walletmanagement.model.WalletRequest;
 import com.bootcamp.walletmanagement.model.WalletResponse;

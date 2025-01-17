@@ -11,7 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-public class BootCoinServiceImpl implements BootCoinService{
+public class BootCoinServiceImpl implements BootCoinService {
 
     @Autowired
     private BootCoinRepository bootCoinRepository;

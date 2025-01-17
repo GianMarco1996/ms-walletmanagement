@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class BootCoinMapper {
 
-    public BootCoinDTO documentToDto(BootCoin document){
+    public BootCoinDTO documentToDto(BootCoin document) {
         BootCoinDTO bootCoin = new BootCoinDTO();
         bootCoin.setId(document.getId());
         bootCoin.setType(document.getType());

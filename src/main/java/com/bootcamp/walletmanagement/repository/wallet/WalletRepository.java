@@ -1,6 +1,6 @@
-package com.bootcamp.walletmanagement.repository;
+package com.bootcamp.walletmanagement.repository.wallet;
 
-import com.bootcamp.walletmanagement.model.Wallet;
+import com.bootcamp.walletmanagement.model.wallet.Wallet;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;

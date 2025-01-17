@@ -1,13 +1,13 @@
 package com.bootcamp.walletmanagement.service;
 
-import com.bootcamp.walletmanagement.mapper.WalletMapper;
+import com.bootcamp.walletmanagement.mapper.wallet.WalletMapper;
 import com.bootcamp.walletmanagement.messaging.KafkaProducer;
-import com.bootcamp.walletmanagement.model.Wallet;
-import com.bootcamp.walletmanagement.model.WalletDTO;
-import com.bootcamp.walletmanagement.model.YankearWalletDTO;
+import com.bootcamp.walletmanagement.model.wallet.Wallet;
+import com.bootcamp.walletmanagement.model.wallet.WalletDTO;
+import com.bootcamp.walletmanagement.model.wallet.YankearWalletDTO;
 import com.bootcamp.walletmanagement.model.redis.Transaction;
-import com.bootcamp.walletmanagement.repository.WalletRepository;
-import com.bootcamp.walletmanagement.service.redis.RedisService;
+import com.bootcamp.walletmanagement.repository.wallet.WalletRepository;
+import com.bootcamp.walletmanagement.service.redis.transaction.RedisService;
 import com.bootcamp.walletmanagement.service.wallet.WalletServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Assertions;
