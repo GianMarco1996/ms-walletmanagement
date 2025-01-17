@@ -9,6 +9,8 @@ servers:
 tags:
   - name: wallet
     description: Todo sobre los monederos
+  - name: bootCoin
+    description: Todo sobre los bootCoin
 paths:
   /wallet/list:
     get:
@@ -347,6 +349,70 @@ paths:
                   message:
                     type: string
                     example: "Error en el servidor."
+  /bootCoin/buyOrSellBootCoin:
+    post:
+      tags:
+        - bootCoin
+      summary: Registra una compra o venta de bootCoin
+      operationId: registerBootCoin
+      description: Crea una nueva compra o venta de bootCoin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BootCoinRequest"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Se registro de forma exitosa."
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
+  /bootCoin/list:
+    get:
+      tags:
+        - bootCoin
+      summary: Devuelve los bootCoin
+      operationId: getBootCoin
+      description: Obtiene los bootCoin
+      parameters:
+        - name: typeBootCoin
+          description: "Indica el filtrado: T: ALL, C: Compra, V: Venta"
+          in: query
+          required: true
+          schema:
+            type: string
+            default: "T"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BootCoinResponse"
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
 components:
   schemas:
     WalletResponse:
@@ -535,3 +601,84 @@ components:
           description: "Descripción del pago realizado"
           type: string
           example: "Te realizo el siguiente pago por el servicio prestado"
+    BootCoinRequest:
+      type: object
+      required:
+        - type
+        - bootCoinAmount
+        - paymentMode
+      properties:
+        type:
+          description: "Tipo de bootCoin: Compra(C) y Venta(V)"
+          type: string
+          example: "C"
+          enum:
+            - C
+            - V
+        bootCoinAmount:
+          description: "Cantidad de bootCoin a comprar o vender"
+          type: integer
+          example: 10
+        paymentMode:
+          description: "Modo de pago para la compra o venta de bootCoin: Yanki(Y) y transferencia(T)"
+          type: string
+          example: "Y"
+          enum:
+            - Y
+            - T
+        walletId:
+          description: "Id del monedero"
+          type: string
+          example: "6764c17cb1fa3cd77d0644d8"
+        productId:
+          description: "Id del producto"
+          type: string
+          example: "6764c17cb1fa3cd77d0644d8"
+    BootCoinResponse:
+      type: object
+      properties:
+        id:
+          description: "Id del bootCoint"
+          type: string
+          example: "6764c17cb1fa3cd77d0644d8"
+        type:
+          description: "Tipo de bootCoin: Compra(C) y Venta(V)"
+          type: string
+          example: "Compra"
+        bootCoinAmount:
+          description: "Cantidad de bootCoin a comprar o vender"
+          type: integer
+          example: 10
+        paymentMode:
+          description: "Modo de pago para la compra o venta de bootCoin: Yanki(Y) y transferencia(T)"
+          type: string
+          example: "Yanki"
+        walletId:
+          description: "Id del monedero"
+          type: string
+          example: "6764c17cb1fa3cd77d0644d8"
+        product:
+          type: object
+          properties:
+            id:
+              description: "Id del producto"
+              type: string
+              example: "6764c17cb1fa3cd77d0644d8"
+            name:
+              description: "Nombre del producto"
+              type: string
+              example: "Boocoint"
+            category:
+              description: "Categoría del producto"
+              type: string
+              example: "Boocoint"
+            pricePurchase:
+              description: "Precio de compra del BootCoin"
+              type: number
+              format: double
+              example: 3.14
+            priceSale:
+              description: "Precio de venta del BootCoin"
+              type: number
+              format: double
+              example: 3.20
