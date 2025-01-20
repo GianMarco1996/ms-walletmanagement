@@ -349,6 +349,47 @@ paths:
                   message:
                     type: string
                     example: "Error en el servidor."
+  /wallet/bootCoinTransaction/{id}:
+    put:
+      tags:
+        - wallet
+      summary: Realiza la transacción de la compra o venta del bootCoin
+      operationId: bootCoinTransaction
+      description: Realiza la transacción de la compra o venta del bootCoin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del monedero
+          schema:
+            type: string
+            example: "6764c17cb1fa3cd77d0644d8"
+        - name: bootCoinId
+          in: query
+          required: true
+          description: ID del bootCoin
+          schema:
+            type: string
+            example: "6764c17cb1fa3cd77d0644d8"
+      responses:
+        "200":
+          description: "Operación finalizada correctamente"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Se registro de forma exitosa."
+        "500":
+          description: "Errores técnicos"
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "Error en el servidor."
   /bootCoin/buyOrSellBootCoin:
     post:
       tags:

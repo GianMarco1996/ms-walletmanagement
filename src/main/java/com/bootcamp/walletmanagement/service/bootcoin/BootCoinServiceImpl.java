@@ -42,4 +42,19 @@ public class BootCoinServiceImpl implements BootCoinService {
     public Mono<BootCoin> registerBootCoin(Mono<BootCoin> bootCoin) {
         return bootCoin.flatMap(bootCoinRepository::save);
     }
+
+    @Override
+    public Mono<BootCoinDTO> getBootCoinDetail(String id) {
+        return bootCoinRepository.findById(id)
+                .map(bootCoinMapper::documentToDto)
+                .map(bootCoin -> {
+                    bootCoin.setProduct(productRedisService.getProductRedis(bootCoin.getProductId()));
+                    return bootCoin;
+                });
+    }
+
+    @Override
+    public Mono<Void> deleteBootCoin(String id) {
+        return bootCoinRepository.deleteById(id);
+    }
 }

@@ -78,4 +78,10 @@ public class WalletController implements WalletApi {
         return walletService.associateBootCoin(id)
                 .map(ResponseEntity::ok);
     }
+
+    @Override
+    public Mono<ResponseEntity<Object>> bootCoinTransaction(String id, String bootCoinId, ServerWebExchange exchange) {
+        return walletService.bootCoinTransaction(id, bootCoinId)
+                .map(ResponseEntity::ok);
+    }
 }

@@ -10,4 +10,8 @@ public interface BootCoinService {
     Flux<BootCoinDTO> getBootCoin(String typeBootCoin);
 
     Mono<BootCoin> registerBootCoin(Mono<BootCoin> bootCoin);
+
+    Mono<BootCoinDTO> getBootCoinDetail(String id);
+
+    Mono<Void> deleteBootCoin(String id);
 }

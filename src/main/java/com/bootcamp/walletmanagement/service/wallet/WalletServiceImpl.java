@@ -3,10 +3,12 @@ package com.bootcamp.walletmanagement.service.wallet;
 import com.bootcamp.walletmanagement.mapper.wallet.WalletMapper;
 import com.bootcamp.walletmanagement.messaging.KafkaProducer;
 import com.bootcamp.walletmanagement.messaging.KafkaTransaction;
+import com.bootcamp.walletmanagement.model.bootcoin.BootCoinDTO;
 import com.bootcamp.walletmanagement.model.wallet.Wallet;
 import com.bootcamp.walletmanagement.model.wallet.WalletDTO;
 import com.bootcamp.walletmanagement.model.wallet.YankearWalletDTO;
 import com.bootcamp.walletmanagement.repository.wallet.WalletRepository;
+import com.bootcamp.walletmanagement.service.bootcoin.BootCoinService;
 import com.bootcamp.walletmanagement.service.redis.transaction.RedisService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,9 @@ public class WalletServiceImpl implements WalletService {
 
     @Autowired
     private RedisService redisService;
+
+    @Autowired
+    private BootCoinService bootCoinService;
 
     @Override
     public Flux<Wallet> getWallets(String status) {
@@ -153,6 +158,60 @@ public class WalletServiceImpl implements WalletService {
                 .flatMap(wallet -> Mono.just("BootCoin asociado correctamente"));
     }
 
+    @Override
+    public Mono<String> bootCoinTransaction(String id, String bootCoinId) {
+        return bootCoinService.getBootCoinDetail(bootCoinId)
+                .flatMap(bootCoin -> walletRepository.findById(id)
+                        .flatMap(wallet -> {
+                            Double amount;
+                            if (Objects.isNull(wallet.getBootCoin())) {
+                                throw new IllegalArgumentException("Su monedero no se encuentra asociado con el bootCoin.");
+                            }
+                            if (bootCoin.getType().equals("Compra")) {
+                                if (wallet.getBootCoin() < bootCoin.getBootCoinAmount()) {
+                                    throw new IllegalArgumentException("Su monedero no cuenta con los bootCoin suficiente para vender.");
+                                }
+                                amount = bootCoin.getBootCoinAmount() * bootCoin.getProduct().getPricePurchase();
+                                wallet.setBootCoin(wallet.getBootCoin() - bootCoin.getBootCoinAmount());
+                                wallet.setCurrentBalance(wallet.getCurrentBalance() + amount);
+                            } else {
+                                amount = bootCoin.getBootCoinAmount() * bootCoin.getProduct().getPriceSale();
+                                if (wallet.getCurrentBalance() < amount) {
+                                    throw new IllegalArgumentException("No tiene saldo suficiente para realizar el pago.");
+                                }
+                                wallet.setBootCoin(wallet.getBootCoin() + bootCoin.getBootCoinAmount());
+                                wallet.setCurrentBalance(wallet.getCurrentBalance() - amount);
+                            }
+                            return walletRepository.save(wallet)
+                                    .flatMap(wa -> updateYankiBootCoinOrigin(Mono.just(wa), bootCoin));
+                        })
+                        .flatMap(transactions -> walletRepository.findById(bootCoin.getWalletId())
+                                .flatMap(wallet -> {
+                                    Double amount;
+                                    if (bootCoin.getType().equals("Compra")) {
+                                        amount = bootCoin.getBootCoinAmount() * bootCoin.getProduct().getPricePurchase();
+                                        if (wallet.getCurrentBalance() < amount) {
+                                            throw new IllegalArgumentException("El monedero comprador no tiene suficiente saldo.");
+                                        }
+                                        wallet.setBootCoin(wallet.getBootCoin() + bootCoin.getBootCoinAmount());
+                                        wallet.setCurrentBalance(wallet.getCurrentBalance() - amount);
+                                    } else {
+                                        amount = bootCoin.getBootCoinAmount() * bootCoin.getProduct().getPriceSale();
+                                        wallet.setBootCoin(wallet.getBootCoin() - bootCoin.getBootCoinAmount());
+                                        wallet.setCurrentBalance(wallet.getCurrentBalance() + amount);
+                                    }
+                                    return walletRepository.save(wallet)
+                                            .flatMap(wa -> updateYankiBootCoinDestination(transactions, bootCoin, wallet.getMobile()));
+                                }))
+                )
+                .map(transactions -> {
+                    sendMessage(transactions);
+                    return transactions;
+                })
+                .flatMap(t -> bootCoinService.deleteBootCoin(bootCoinId))
+                .then(Mono.just("Se realizo la operación correctamente."));
+    }
+
     private Mono<List<KafkaTransaction>> updateYankiOrigin(Mono<Wallet> wallet, YankearWalletDTO yanki) {
         return wallet.flatMap(wa -> {
             List<KafkaTransaction> transactions = new ArrayList<>();
@@ -188,5 +247,56 @@ public class WalletServiceImpl implements WalletService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private Mono<List<KafkaTransaction>> updateYankiBootCoinOrigin(Mono<Wallet> wallet, BootCoinDTO bootCoin) {
+        return wallet.flatMap(wa -> {
+            List<KafkaTransaction> transactions = new ArrayList<>();
+            KafkaTransaction transaction = new KafkaTransaction();
+            transaction.setCategory("Yanki");
+            transaction.setType("Movimiento");
+            transaction.setMobile(wa.getMobile());
+            transaction.setTransactionDate(LocalDate.now().toString());
+
+            double amount;
+            String description;
+            if (bootCoin.getType().equals("Compra")) {
+                amount = bootCoin.getBootCoinAmount() * bootCoin.getProduct().getPricePurchase();
+                description = "Se realizo la venta de bootCoin ".concat(bootCoin.getBootCoinAmount().toString());
+            } else {
+                amount = bootCoin.getBootCoinAmount() * bootCoin.getProduct().getPriceSale();
+                description = "Se realizo la compra de bootCoin ".concat(bootCoin.getBootCoinAmount().toString());
+            }
+            transaction.setAmount(amount);
+            transaction.setDescription(description);
+
+            transactions.add(transaction);
+            return Mono.just(transactions);
+        });
+    }
+
+    private Mono<List<KafkaTransaction>> updateYankiBootCoinDestination(List<KafkaTransaction> transactions, BootCoinDTO bootCoin, String mobile) {
+        return Mono.just(transactions).map(tr -> {
+            KafkaTransaction transaction = new KafkaTransaction();
+            transaction.setCategory("Yanki");
+            transaction.setType("Movimiento");
+            transaction.setTransactionDate(LocalDate.now().toString());
+            transaction.setMobile(mobile);
+
+            double amount;
+            String description;
+            if (bootCoin.getType().equals("Compra")) {
+                amount = bootCoin.getBootCoinAmount() * bootCoin.getProduct().getPricePurchase();
+                description = "Se realizo la compra de bootCoin ".concat(bootCoin.getBootCoinAmount().toString());
+            } else {
+                amount = bootCoin.getBootCoinAmount() * bootCoin.getProduct().getPriceSale();
+                description = "Se realizo la venta de bootCoin ".concat(bootCoin.getBootCoinAmount().toString());
+            }
+            transaction.setAmount(amount);
+            transaction.setDescription(description);
+
+            tr.add(transaction);
+            return tr;
+        });
     }
 }
