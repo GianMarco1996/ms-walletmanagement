@@ -2,11 +2,14 @@ package com.bootcamp.walletmanagement.service;
 
 import com.bootcamp.walletmanagement.mapper.wallet.WalletMapper;
 import com.bootcamp.walletmanagement.messaging.KafkaProducer;
+import com.bootcamp.walletmanagement.model.bootcoin.BootCoinDTO;
+import com.bootcamp.walletmanagement.model.redis.Product;
 import com.bootcamp.walletmanagement.model.wallet.Wallet;
 import com.bootcamp.walletmanagement.model.wallet.WalletDTO;
 import com.bootcamp.walletmanagement.model.wallet.YankearWalletDTO;
 import com.bootcamp.walletmanagement.model.redis.Transaction;
 import com.bootcamp.walletmanagement.repository.wallet.WalletRepository;
+import com.bootcamp.walletmanagement.service.bootcoin.BootCoinService;
 import com.bootcamp.walletmanagement.service.redis.transaction.RedisService;
 import com.bootcamp.walletmanagement.service.wallet.WalletServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -42,6 +45,9 @@ public class WalletServiceImplTest {
 
     @Mock
     RedisService redisService;
+
+    @Mock
+    BootCoinService bootCoinService;
 
     @BeforeEach
     void setUp(){
@@ -406,5 +412,162 @@ public class WalletServiceImplTest {
 
         Mockito.verify(walletRepository).findById(Mockito.anyString());
         Mockito.verify(walletRepository).findWalletByMobile(Mockito.anyString());
+    }
+
+    @Test
+    void associateBootCoin() {
+        Wallet wallet = new Wallet();
+        wallet.setId("677ff06ddeea8c5eb02f44f5");
+        wallet.setFullNames("Pepe");
+        wallet.setDocumentType("DNI");
+        wallet.setDocumentNumber("87654321");
+        wallet.setMobile("987654321");
+        wallet.setMobileImei("123456789087654");
+        wallet.setEmail("pepe@correo.com");
+        wallet.setCurrentBalance(32D);
+        wallet.setStatus(true);
+        wallet.setBootCoin(0);
+
+        Mockito.when(walletRepository.findById(Mockito.anyString())).thenReturn(Mono.just(wallet));
+
+        Mockito.when(walletRepository.save(Mockito.any(Wallet.class))).thenReturn(Mono.just(wallet));
+
+        Mono<String> result = walletService.associateBootCoin(wallet.getId());
+
+        StepVerifier.create(result)
+                .expectNextMatches(walletResult -> {
+                    Assertions.assertEquals("BootCoin asociado correctamente", walletResult);
+                    return true;
+                })
+                .verifyComplete();
+
+        Mockito.verify(walletRepository).findById(Mockito.anyString());
+        Mockito.verify(walletRepository).save(Mockito.any(Wallet.class));
+    }
+
+    @Test
+    void bootCoinTransaction_buys() throws JsonProcessingException {
+        Wallet wallet = new Wallet();
+        wallet.setId("677ff06ddeea8c5eb02f44f5");
+        wallet.setFullNames("Pepe");
+        wallet.setDocumentType("DNI");
+        wallet.setDocumentNumber("87654321");
+        wallet.setMobile("987654321");
+        wallet.setMobileImei("123456789087654");
+        wallet.setEmail("pepe@correo.com");
+        wallet.setCurrentBalance(320D);
+        wallet.setStatus(true);
+        wallet.setBootCoin(30);
+
+        BootCoinDTO bootCoin = new BootCoinDTO();
+        bootCoin.setId("677ff06ddeea8c5eb02f44f6");
+        bootCoin.setType("Compra");
+        bootCoin.setBootCoinAmount(5);
+        bootCoin.setPaymentMode("Yanki");
+        bootCoin.setWalletId("677ff06ddeea8c5eb02f44f5");
+        bootCoin.setProductId("6789a9f814020f5b783bcf32");
+        Product product = new Product();
+        product.setId("6789a9f814020f5b783bcf32");
+        product.setName("BootCoin");
+        product.setType("Pasivo");
+        product.setCategory("BootCoin");
+        product.setDescription("Moneda Virtual");
+        product.setPricePurchase(3.14);
+        product.setPriceSale(3.25);
+        bootCoin.setProduct(product);
+
+        Wallet wallet2 = new Wallet();
+        wallet2.setId("677ff06ddeea8c5eb02f44f7");
+        wallet2.setFullNames("Pepe");
+        wallet2.setDocumentType("DNI");
+        wallet2.setDocumentNumber("87654321");
+        wallet2.setMobile("987654333");
+        wallet2.setMobileImei("123456789087654");
+        wallet2.setEmail("pepe@correo.com");
+        wallet2.setCurrentBalance(320D);
+        wallet2.setStatus(true);
+        wallet2.setBootCoin(30);
+
+        Mockito.when(bootCoinService.getBootCoinDetail(Mockito.anyString())).thenReturn(Mono.just(bootCoin));
+
+        Mockito.when(walletRepository.findById(Mockito.anyString())).thenReturn(Mono.just(wallet));
+
+        Mockito.when(walletRepository.save(Mockito.any(Wallet.class))).thenReturn(Mono.just(wallet));
+
+        Mockito.doNothing().when(kafkaProducer).send(Mockito.anyList());
+
+        Mockito.when(bootCoinService.deleteBootCoin(Mockito.anyString())).thenReturn(Mono.empty());
+
+        Mono<String> result = walletService.bootCoinTransaction(wallet2.getId(), "677ff06ddeea8c5eb02f44f6");
+
+        StepVerifier.create(result)
+                .expectNextMatches(walletResult -> {
+                    Assertions.assertEquals("Se realizo la operación correctamente.", walletResult);
+                    return true;
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void bootCoinTransaction_sale() throws JsonProcessingException {
+        Wallet wallet = new Wallet();
+        wallet.setId("677ff06ddeea8c5eb02f44f5");
+        wallet.setFullNames("Pepe");
+        wallet.setDocumentType("DNI");
+        wallet.setDocumentNumber("87654321");
+        wallet.setMobile("987654321");
+        wallet.setMobileImei("123456789087654");
+        wallet.setEmail("pepe@correo.com");
+        wallet.setCurrentBalance(320D);
+        wallet.setStatus(true);
+        wallet.setBootCoin(30);
+
+        BootCoinDTO bootCoin = new BootCoinDTO();
+        bootCoin.setId("677ff06ddeea8c5eb02f44f6");
+        bootCoin.setType("Venta");
+        bootCoin.setBootCoinAmount(5);
+        bootCoin.setPaymentMode("Yanki");
+        bootCoin.setWalletId("677ff06ddeea8c5eb02f44f5");
+        bootCoin.setProductId("6789a9f814020f5b783bcf32");
+        Product product = new Product();
+        product.setId("6789a9f814020f5b783bcf32");
+        product.setName("BootCoin");
+        product.setType("Pasivo");
+        product.setCategory("BootCoin");
+        product.setDescription("Moneda Virtual");
+        product.setPricePurchase(3.14);
+        product.setPriceSale(3.25);
+        bootCoin.setProduct(product);
+
+        Wallet wallet2 = new Wallet();
+        wallet2.setId("677ff06ddeea8c5eb02f44f7");
+        wallet2.setFullNames("Pepe");
+        wallet2.setDocumentType("DNI");
+        wallet2.setDocumentNumber("87654321");
+        wallet2.setMobile("987654333");
+        wallet2.setMobileImei("123456789087654");
+        wallet2.setEmail("pepe@correo.com");
+        wallet2.setCurrentBalance(320D);
+        wallet2.setStatus(true);
+        wallet2.setBootCoin(30);
+
+        Mockito.when(bootCoinService.getBootCoinDetail(Mockito.anyString())).thenReturn(Mono.just(bootCoin));
+
+        Mockito.when(walletRepository.findById(Mockito.anyString())).thenReturn(Mono.just(wallet));
+
+        Mockito.when(walletRepository.save(Mockito.any(Wallet.class))).thenReturn(Mono.just(wallet));
+
+        Mockito.doNothing().when(kafkaProducer).send(Mockito.anyList());
+
+        Mockito.when(bootCoinService.deleteBootCoin(Mockito.anyString())).thenReturn(Mono.empty());
+
+        Mono<String> result = walletService.bootCoinTransaction(wallet2.getId(), "677ff06ddeea8c5eb02f44f6");
+
+        StepVerifier.create(result)
+                .expectNextMatches(walletResult -> {
+                    Assertions.assertEquals("Se realizo la operación correctamente.", walletResult);
+                    return true;
+                })
+                .verifyComplete();
     }
 }
